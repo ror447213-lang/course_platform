@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:8000';
+const API_BASE = 'https://course-platform-zyx4.onrender.com';
 
 const TokenManager = {
   get: () => localStorage.getItem('access_token'),
