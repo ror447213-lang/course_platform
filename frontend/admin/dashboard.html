@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - CourseStore</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <a href="/index.html" class="nav-brand">⚡ CourseStore <span style="color:#EF4444;font-size:0.7rem;font-weight:600;background:rgba(239,68,68,0.15);padding:2px 8px;border-radius:4px;margin-left:8px;">ADMIN</span></a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="/admin/dashboard.html" class="btn-nav">Dashboard</a></li>
+    <li><a href="#" onclick="logout()">Logout</a></li>
+  </ul>
+</nav>
+<div class="dashboard-layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Overview</div>
+      <a class="sidebar-link active" onclick="showSection('overview',this)"><span class="icon">📊</span> Dashboard</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Management</div>
+      <a class="sidebar-link" onclick="showSection('courses',this)"><span class="icon">📚</span> Courses <span id="navCourseCount" style="margin-left:auto;background:rgba(79,70,229,0.2);color:var(--primary-light);padding:2px 8px;border-radius:10px;font-size:0.75rem;"></span></a>
+      <a class="sidebar-link" onclick="showSection('payments',this)"><span class="icon">💳</span> Payments <span id="navPendingCount" style="margin-left:auto;background:rgba(245,158,11,0.2);color:#F59E0B;padding:2px 8px;border-radius:10px;font-size:0.75rem;"></span></a>
+      <a class="sidebar-link" onclick="showSection('users',this)"><span class="icon">👥</span> Users</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">System</div>
+      <a class="sidebar-link" href="/index.html" target="_blank"><span class="icon">🌐</span> View Site</a>
+      <a class="sidebar-link" href="#" onclick="logout()"><span class="icon">🚪</span> Logout</a>
+    </div>
+  </aside>
+  <main class="main-content">
+    <section id="section-overview">
+      <div class="page-header"><h1>📊 Admin Dashboard</h1><p>Platform overview and quick actions</p></div>
+      <div class="stats-grid">
+        <div class="stat-card"><span class="stat-icon">👥</span><span class="stat-number" id="statUsers">—</span><span class="stat-label">Total Users</span></div>
+        <div class="stat-card"><span class="stat-icon">📚</span><span class="stat-number" id="statCourses">—</span><span class="stat-label">Active Courses</span></div>
+        <div class="stat-card"><span class="stat-icon">✅</span><span class="stat-number" id="statSales">—</span><span class="stat-label">Total Sales</span></div>
+        <div class="stat-card"><span class="stat-icon">🕐</span><span class="stat-number" id="statPending">—</span><span class="stat-label">Pending Reviews</span></div>
+        <div class="stat-card"><span class="stat-icon">💰</span><span class="stat-number" id="statRevenue">—</span><span class="stat-label">Total Revenue</span></div>
+      </div>
+      <div class="table-container">
+        <div class="table-header"><h3 class="table-title">🕐 Pending Verifications</h3><button class="btn btn-primary btn-sm" onclick="showSection('payments',document.querySelectorAll('.sidebar-link')[2])">View All</button></div>
+        <div id="recentPending"><div class="loading-overlay"><div class="loading-spinner"></div></div></div>
+      </div>
+    </section>
+
+    <section id="section-courses" class="hidden">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <div><h1>📚 Manage Courses</h1><p>Add, edit, or remove courses</p></div>
+        <button class="btn btn-primary" onclick="openCourseModal()">+ Add Course</button>
+      </div>
+      <div class="table-container"><div id="coursesTable"><div class="loading-overlay"><div class="loading-spinner"></div></div></div></div>
+    </section>
+
+    <section id="section-payments" class="hidden">
+      <div class="page-header"><h1>💳 Payment Verifications</h1><p>Review and approve or reject payment submissions</p></div>
+      <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+        <button class="btn btn-ghost btn-sm" id="filterAll" onclick="filterPayments('all',this)">All</button>
+        <button class="btn btn-sm" style="background:rgba(245,158,11,0.15);color:#F59E0B;border:1px solid rgba(245,158,11,0.3);" id="filterPending" onclick="filterPayments('pending',this)">🕐 Pending</button>
+        <button class="btn btn-sm" style="background:rgba(34,197,94,0.15);color:#22C55E;border:1px solid rgba(34,197,94,0.3);" id="filterApproved" onclick="filterPayments('approved',this)">✅ Approved</button>
+        <button class="btn btn-sm" style="background:rgba(239,68,68,0.15);color:#EF4444;border:1px solid rgba(239,68,68,0.3);" id="filterRejected" onclick="filterPayments('rejected',this)">❌ Rejected</button>
+      </div>
+      <div class="table-container"><div id="paymentsTable"><div class="loading-overlay"><div class="loading-spinner"></div></div></div></div>
+    </section>
+
+    <section id="section-users" class="hidden">
+      <div class="page-header"><h1>👥 Users</h1><p>All registered users</p></div>
+      <div class="table-container"><div id="usersTable"><div class="loading-overlay"><div class="loading-spinner"></div></div></div></div>
+    </section>
+  </main>
+</div>
+
+<!-- Course Modal -->
+<div class="modal-overlay hidden" id="courseModal">
+  <div class="modal">
+    <div class="modal-header"><h3 class="modal-title" id="courseModalTitle">Add New Course</h3><button class="modal-close" onclick="closeCourseModal()">✕</button></div>
+    <form id="courseForm">
+      <input type="hidden" id="editCourseId">
+      <div class="form-group"><label class="form-label">Course Title *</label><input type="text" id="courseTitle" class="form-input" placeholder="e.g. Complete Python Course" required></div>
+      <div class="form-group"><label class="form-label">Description *</label><textarea id="courseDescription" class="form-input" rows="4" placeholder="Detailed course description..." required></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="form-group"><label class="form-label">Price (₹) *</label><input type="number" id="coursePrice" class="form-input" placeholder="499" min="1" step="1" required></div>
+        <div class="form-group"><label class="form-label">Thumbnail URL</label><input type="url" id="courseThumbnail" class="form-input" placeholder="https://..."></div>
+      </div>
+      <div class="form-group"><label class="form-label">Download Link *</label><input type="url" id="courseDownload" class="form-input" placeholder="https://drive.google.com/..." required><span class="text-sm text-muted" style="margin-top:4px;display:block;">🔒 Hidden until purchase approved</span></div>
+      <div style="display:flex;gap:1rem;justify-content:flex-end;margin-top:1.5rem;">
+        <button type="button" class="btn btn-ghost" onclick="closeCourseModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="saveCourseBtn">💾 Save Course</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Verify Modal -->
+<div class="modal-overlay hidden" id="verifyModal">
+  <div class="modal">
+    <div class="modal-header"><h3 class="modal-title">🔍 Verify Payment</h3><button class="modal-close" onclick="closeVerifyModal()">✕</button></div>
+    <div id="verifyPaymentDetails" style="margin-bottom:1.5rem;"></div>
+    <div class="form-group"><label class="form-label">Admin Note (optional)</label><textarea id="adminNote" class="form-input" rows="3" placeholder="Optional message to the user..."></textarea></div>
+    <div style="display:flex;gap:1rem;justify-content:flex-end;">
+      <button class="btn btn-danger" id="rejectBtn" onclick="processPayment('rejected')">❌ Reject</button>
+      <button class="btn btn-accent" id="approveBtn" onclick="processPayment('approved')">✅ Approve</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/app.js"></script>
+<script>
+if(!requireAdmin()) throw new Error('Admin required');
+let currentPaymentId=null, allPayments=[], currentFilter='all';
+
+function showSection(name, el) {
+  document.querySelectorAll('[id^="section-"]').forEach(s => s.classList.add('hidden'));
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+  document.getElementById(`section-${name}`).classList.remove('hidden');
+  el?.classList.add('active');
+  if(name==='courses') loadCourses();
+  if(name==='payments') loadPayments();
+  if(name==='users') loadUsers();
+}
+
+async function loadStats() {
+  try {
+    const stats = await AdminAPI.stats();
+    document.getElementById('statUsers').textContent = stats.total_users;
+    document.getElementById('statCourses').textContent = stats.total_courses;
+    document.getElementById('statSales').textContent = stats.total_sales;
+    document.getElementById('statPending').textContent = stats.pending_payments;
+    document.getElementById('statRevenue').textContent = formatCurrency(stats.total_revenue);
+    if(stats.pending_payments>0) document.getElementById('navPendingCount').textContent = stats.pending_payments;
+    loadRecentPending();
+  } catch(err) { Toast.error('Failed to load stats'); }
+}
+
+async function loadRecentPending() {
+  try {
+    const payments = await AdminAPI.payments('pending');
+    const el = document.getElementById('recentPending');
+    if(payments.length===0) { el.innerHTML='<div class="empty-state"><div class="empty-icon">🎉</div><div class="empty-title">No Pending Payments</div><div class="empty-text">All caught up!</div></div>'; return; }
+    el.innerHTML = renderPaymentsTable(payments.slice(0,5), true);
+  } catch(err) {}
+}
+
+async function loadPayments() {
+  try { allPayments=await AdminAPI.payments(); renderFilteredPayments(); } catch(err) { Toast.error('Failed to load payments'); }
+}
+
+function filterPayments(filter, btn) {
+  currentFilter=filter;
+  renderFilteredPayments();
+}
+
+function renderFilteredPayments() {
+  const filtered = currentFilter==='all' ? allPayments : allPayments.filter(p => p.status===currentFilter);
+  const el = document.getElementById('paymentsTable');
+  if(filtered.length===0) { el.innerHTML='<div class="empty-state"><div class="empty-icon">💳</div><div class="empty-title">No payments found</div></div>'; return; }
+  el.innerHTML = renderPaymentsTable(filtered, false);
+}
+
+function renderPaymentsTable(payments, mini=false) {
+  return `<table><thead><tr><th>#ID</th><th>User</th><th>Course</th><th>Amount</th><th>UTR</th><th>Screenshot</th><th>Status</th><th>Date</th>${!mini?'<th>Actions</th>':''}</tr></thead><tbody>${payments.map(p=>`<tr><td class="text-muted">#${p.id}</td><td><div style="font-weight:600;color:var(--text-primary);">${p.user_name||'N/A'}</div><div style="font-size:0.78rem;color:var(--text-muted);">${p.user_email||''}</div></td><td style="color:var(--primary-light);">${p.course_title||`Course #${p.course_id}`}</td><td style="color:var(--accent);font-weight:700;">${formatCurrency(p.amount)}</td><td style="font-family:monospace;">${p.utr_number||'<span class="text-muted">—</span>'}</td><td>${p.screenshot_path?`<a href="${AdminAPI.screenshot(p.id)}" target="_blank" class="btn btn-ghost btn-sm" style="padding:4px 10px;">🖼️ View</a>`:'<span class="text-muted text-sm">None</span>'}</td><td>${statusBadge(p.status)}</td><td class="text-muted" style="font-size:0.8rem;">${formatDate(p.created_at)}</td>${!mini?`<td>${p.status==='pending'?`<button class="btn btn-primary btn-sm" onclick="openVerifyModal(${p.id},'${p.user_name}','${p.course_title}',${p.amount},'${p.utr_number||''}',${p.id})">🔍 Review</button>`:'<span class="text-muted text-sm">Processed</span>'}</td>`:''}</tr>`).join('')}</tbody></table>`;
+}
+
+async function loadCourses() {
+  try {
+    const courses = await CoursesAPI.adminList();
+    document.getElementById('navCourseCount').textContent = courses.length;
+    const el = document.getElementById('coursesTable');
+    if(courses.length===0) { el.innerHTML='<div class="empty-state"><div class="empty-icon">📚</div><div class="empty-title">No courses yet</div><div class="empty-text">Click "Add Course" to get started.</div></div>'; return; }
+    el.innerHTML = `<table><thead><tr><th>#</th><th>Thumbnail</th><th>Title</th><th>Price</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead><tbody>${courses.map(c=>`<tr><td class="text-muted">#${c.id}</td><td>${c.thumbnail_url?`<img src="${c.thumbnail_url}" style="width:48px;height:36px;object-fit:cover;border-radius:6px;" onerror="this.outerHTML='<span style=font-size:1.5rem>📚</span>'">`:'<span style="font-size:1.5rem;">📚</span>'}</td><td><div style="font-weight:600;color:var(--text-primary);">${c.title}</div><div style="font-size:0.78rem;color:var(--text-muted);">${c.description.slice(0,50)}${c.description.length>50?'...':''}</div></td><td style="color:var(--accent);font-weight:700;">${formatCurrency(c.price)}</td><td><span class="badge ${c.is_active?'badge-approved':'badge-rejected'}">${c.is_active?'✅ Active':'❌ Inactive'}</span></td><td class="text-muted text-sm">${formatDate(c.created_at)}</td><td><div style="display:flex;gap:0.5rem;"><button class="btn btn-ghost btn-sm" onclick="editCourse(${c.id},'${encodeURIComponent(JSON.stringify(c))}')">✏️ Edit</button><button class="btn btn-danger btn-sm" onclick="deleteCourse(${c.id},'${c.title}')">🗑️</button></div></td></tr>`).join('')}</tbody></table>`;
+  } catch(err) { Toast.error('Failed to load courses'); }
+}
+
+async function loadUsers() {
+  try {
+    const users = await AdminAPI.users();
+    document.getElementById('usersTable').innerHTML = `<table><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Joined</th></tr></thead><tbody>${users.map(u=>`<tr><td class="text-muted">#${u.id}</td><td style="font-weight:600;color:var(--text-primary);">${u.name}</td><td style="color:var(--primary-light);">${u.email}</td><td class="text-muted text-sm">${formatDate(u.created_at)}</td></tr>`).join('')}</tbody></table>`;
+  } catch(err) { Toast.error('Failed to load users'); }
+}
+
+function openCourseModal(course=null) {
+  document.getElementById('courseModal').classList.remove('hidden');
+  document.getElementById('editCourseId').value='';
+  document.getElementById('courseForm').reset();
+  document.getElementById('courseModalTitle').textContent='Add New Course';
+  if(course) {
+    document.getElementById('courseModalTitle').textContent='Edit Course';
+    document.getElementById('editCourseId').value=course.id;
+    document.getElementById('courseTitle').value=course.title;
+    document.getElementById('courseDescription').value=course.description;
+    document.getElementById('coursePrice').value=course.price;
+    document.getElementById('courseThumbnail').value=course.thumbnail_url||'';
+    document.getElementById('courseDownload').value=course.download_link;
+  }
+}
+
+function closeCourseModal() { document.getElementById('courseModal').classList.add('hidden'); }
+
+function editCourse(id, encoded) { openCourseModal(JSON.parse(decodeURIComponent(encoded))); }
+
+async function deleteCourse(id, title) {
+  if(!confirm(`Deactivate "${title}"?`)) return;
+  try { await CoursesAPI.delete(id); Toast.success('Course deactivated'); loadCourses(); loadStats(); } catch(err) { Toast.error(err.message); }
+}
+
+document.getElementById('courseForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn=document.getElementById('saveCourseBtn');
+  setLoading(btn,true);
+  const editId=document.getElementById('editCourseId').value;
+  const data={ title:document.getElementById('courseTitle').value.trim(), description:document.getElementById('courseDescription').value.trim(), price:parseFloat(document.getElementById('coursePrice').value), thumbnail_url:document.getElementById('courseThumbnail').value.trim()||null, download_link:document.getElementById('courseDownload').value.trim() };
+  try {
+    if(editId) { await CoursesAPI.update(editId,data); Toast.success('Course updated!'); }
+    else { await CoursesAPI.create(data); Toast.success('Course created!'); }
+    closeCourseModal(); loadCourses(); loadStats();
+  } catch(err) { Toast.error(err.message); }
+  finally { setLoading(btn,false); }
+});
+
+function openVerifyModal(paymentId, userName, courseTitle, amount, utr, screenshotId) {
+  currentPaymentId=paymentId;
+  document.getElementById('verifyModal').classList.remove('hidden');
+  document.getElementById('adminNote').value='';
+  document.getElementById('verifyPaymentDetails').innerHTML = `
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1.25rem;margin-bottom:1rem;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div><div class="text-muted text-sm">User</div><div style="font-weight:600;color:var(--text-primary);">${userName}</div></div>
+        <div><div class="text-muted text-sm">Course</div><div style="font-weight:600;color:var(--primary-light);">${courseTitle}</div></div>
+        <div><div class="text-muted text-sm">Amount</div><div style="font-weight:700;color:var(--accent);font-size:1.2rem;">${formatCurrency(amount)}</div></div>
+        <div><div class="text-muted text-sm">UTR Number</div><div style="font-family:monospace;color:var(--text-primary);">${utr||'Not provided'}</div></div>
+      </div>
+    </div>
+    ${screenshotId?`<div style="margin-bottom:1rem;"><a href="${AdminAPI.screenshot(screenshotId)}" target="_blank" class="btn btn-ghost btn-sm">🖼️ View Payment Screenshot</a></div>`:`<div class="alert alert-info" style="margin-bottom:1rem;"><span>ℹ️</span><span>No screenshot provided.</span></div>`}`;
+}
+
+function closeVerifyModal() { document.getElementById('verifyModal').classList.add('hidden'); currentPaymentId=null; }
+
+async function processPayment(status) {
+  if(!currentPaymentId) return;
+  const btn=status==='approved'?document.getElementById('approveBtn'):document.getElementById('rejectBtn');
+  setLoading(btn,true);
+  try {
+    const result=await AdminAPI.verifyPayment(currentPaymentId, { status, admin_note:document.getElementById('adminNote').value.trim() });
+    closeVerifyModal(); Toast.success(result.message); loadStats(); loadPayments();
+  } catch(err) { Toast.error(err.message); }
+  finally { setLoading(btn,false); }
+}
+
+document.getElementById('courseModal').addEventListener('click',(e)=>{ if(e.target===e.currentTarget) closeCourseModal(); });
+document.getElementById('verifyModal').addEventListener('click',(e)=>{ if(e.target===e.currentTarget) closeVerifyModal(); });
+
+loadStats();
+</script>
+</body>
+</html>
