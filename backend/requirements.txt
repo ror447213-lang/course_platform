@@ -1,3 +1,5 @@
+setuptools==68.2.2
+wheel
 fastapi==0.104.1
 uvicorn==0.24.0
 sqlalchemy==2.0.23
@@ -7,7 +9,7 @@ python-multipart==0.0.6
 aiofiles==23.2.1
 aiosmtplib==3.0.1
 email-validator==2.1.0
-Pillow==10.1.0
+Pillow==9.5.0
 qrcode==7.4.2
 python-dotenv==1.0.0
 pydantic[email]==2.5.0
