@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Dashboard - CourseStore</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <a href="/index.html" class="nav-brand">⚡ CourseStore</a>
+  <div id="hamburger" class="hamburger"><span></span><span></span><span></span></div>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="/index.html">Home</a></li>
+    <div id="navAuth"></div>
+  </ul>
+</nav>
+<div class="dashboard-layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Main</div>
+      <a class="sidebar-link active" onclick="showTab('overview',this)"><span class="icon">📊</span> Overview</a>
+      <a class="sidebar-link" onclick="showTab('courses',this)"><span class="icon">📚</span> My Courses</a>
+      <a class="sidebar-link" onclick="showTab('payments',this)"><span class="icon">💳</span> Payments</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Account</div>
+      <a class="sidebar-link" href="/index.html#courses"><span class="icon">🛒</span> Browse Courses</a>
+      <a class="sidebar-link" href="#" onclick="logout()"><span class="icon">🚪</span> Logout</a>
+    </div>
+  </aside>
+  <main class="main-content">
+    <div id="tab-overview">
+      <div class="page-header"><h1 id="welcomeText">👋 Welcome back!</h1><p>Here's your account overview</p></div>
+      <div class="stats-grid">
+        <div class="stat-card"><span class="stat-icon">📚</span><span class="stat-number" id="statOwned">0</span><span class="stat-label">Courses Owned</span></div>
+        <div class="stat-card"><span class="stat-icon">🕐</span><span class="stat-number" id="statPending">0</span><span class="stat-label">Pending Payments</span></div>
+        <div class="stat-card"><span class="stat-icon">✅</span><span class="stat-number" id="statApproved">0</span><span class="stat-label">Approved</span></div>
+      </div>
+      <div class="table-container">
+        <div class="table-header"><h3 class="table-title">📚 My Courses</h3><a href="/index.html#courses" class="btn btn-primary btn-sm">+ Browse More</a></div>
+        <div id="overviewCourses" style="padding:1rem;"><div class="loading-overlay"><div class="loading-spinner"></div></div></div>
+      </div>
+    </div>
+    <div id="tab-courses" class="hidden">
+      <div class="page-header"><h1>📚 My Courses</h1><p>Access your purchased course materials</p></div>
+      <div id="myCoursesList"><div class="loading-overlay"><div class="loading-spinner"></div></div></div>
+    </div>
+    <div id="tab-payments" class="hidden">
+      <div class="page-header"><h1>💳 Payment History</h1><p>Track all your payment submissions</p></div>
+      <div class="table-container">
+        <div class="table-header"><h3 class="table-title">All Payments</h3></div>
+        <div id="paymentsList"><div class="loading-overlay"><div class="loading-spinner"></div></div></div>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/app.js"></script>
+<script>
+if(!requireAuth()) throw new Error('Auth required');
+updateNavigation();
+const user = TokenManager.getUser();
+let purchasedCourses = [], payments = [];
+
+async function loadDashboard() {
+  try {
+    document.getElementById('welcomeText').textContent = `👋 Welcome back, ${user.name}!`;
+    payments = await PaymentsAPI.myPayments();
+    const pending = payments.filter(p => p.status==='pending');
+    const approved = payments.filter(p => p.status==='approved');
+    document.getElementById('statPending').textContent = pending.length;
+    document.getElementById('statApproved').textContent = approved.length;
+    const allCourses = await CoursesAPI.list();
+    const approvedIds = new Set(approved.map(p => p.course_id));
+    purchasedCourses = allCourses.filter(c => approvedIds.has(c.id));
+    document.getElementById('statOwned').textContent = purchasedCourses.length;
+    renderOverview(); renderMyCourses(); renderPayments();
+  } catch(err) { Toast.error(err.message); }
+}
+
+function renderOverview() {
+  const el = document.getElementById('overviewCourses');
+  if(purchasedCourses.length===0) { el.innerHTML='<div class="empty-state"><div class="empty-icon">📚</div><div class="empty-title">No Courses Yet</div><a href="/index.html#courses" class="btn btn-primary" style="margin-top:1rem;">Browse Courses</a></div>'; return; }
+  el.innerHTML = `<div class="courses-grid" style="padding:1rem;">${purchasedCourses.map(c => renderCourseCard(c,true)).join('')}</div>`;
+}
+
+function renderMyCourses() {
+  const el = document.getElementById('myCoursesList');
+  if(purchasedCourses.length===0) { el.innerHTML='<div class="empty-state"><div class="empty-icon">🎓</div><div class="empty-title">No Purchases Yet</div><a href="/index.html#courses" class="btn btn-primary" style="margin-top:1rem;">Shop Courses</a></div>'; return; }
+  el.innerHTML = `<div class="courses-grid">${purchasedCourses.map(c => renderCourseCard(c,true)).join('')}</div>`;
+}
+
+function renderPayments() {
+  const el = document.getElementById('paymentsList');
+  if(payments.length===0) { el.innerHTML='<div class="empty-state"><div class="empty-icon">💳</div><div class="empty-title">No Payments</div></div>'; return; }
+  el.innerHTML = `<table><thead><tr><th>#</th><th>Course</th><th>Amount</th><th>UTR</th><th>Status</th><th>Date</th></tr></thead><tbody>${payments.map(p => `<tr><td class="text-muted">#${p.id}</td><td>Course #${p.course_id}</td><td style="color:var(--accent);font-weight:700;">${formatCurrency(p.amount)}</td><td style="font-family:monospace;color:var(--primary-light);">${p.utr_number||'—'}</td><td>${statusBadge(p.status)}</td><td class="text-muted text-sm">${formatDate(p.created_at)}</td></tr>${p.admin_note?`<tr><td colspan="6" style="padding:0 1.25rem 1rem;"><div class="alert alert-${p.status==='rejected'?'danger':'info'}" style="margin:0;"><span>📝</span><span>Admin Note: ${p.admin_note}</span></div></td></tr>`:''}`).join('')}</tbody></table>`;
+}
+
+function showTab(tab, el) {
+  document.querySelectorAll('[id^="tab-"]').forEach(t => t.classList.add('hidden'));
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.remove('hidden');
+  el?.classList.add('active');
+}
+
+loadDashboard();
+</script>
+</body>
+</html>

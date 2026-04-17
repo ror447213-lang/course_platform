@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - CourseStore</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <a href="/index.html" class="nav-brand">⚡ CourseStore</a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="/index.html">Home</a></li>
+    <li><a href="/register.html" class="btn-nav">Register</a></li>
+  </ul>
+</nav>
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-logo">⚡ CourseStore</div>
+      <p class="auth-subtitle">Welcome back! Sign in to your account.</p>
+    </div>
+    <div id="alertBox"></div>
+    <form id="loginForm">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" id="email" class="form-input" placeholder="you@example.com" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div style="position:relative;">
+          <input type="password" id="password" class="form-input" placeholder="Enter your password" required style="padding-right:48px;">
+          <button type="button" onclick="togglePass()" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.1rem;" id="eyeBtn">👁️</button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full btn-lg" id="loginBtn">🔐 Sign In</button>
+    </form>
+    <div class="divider">or</div>
+    <p class="text-center text-sm" style="color:var(--text-muted);">Don't have an account? <a href="/register.html" style="color:var(--primary-light);font-weight:600;">Create one →</a></p>
+    <div style="margin-top:1.5rem;padding:1rem;background:rgba(79,70,229,0.08);border-radius:8px;border:1px solid rgba(79,70,229,0.2);">
+      <p class="text-sm" style="color:var(--text-muted);text-align:center;margin-bottom:0.5rem;">🔑 Demo Admin</p>
+      <p class="text-sm text-center" style="color:var(--primary-light);">admin@coursestore.com / Admin@123456</p>
+    </div>
+  </div>
+</div>
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/app.js"></script>
+<script>
+redirectIfLoggedIn();
+let showPass = false;
+function togglePass() { showPass=!showPass; document.getElementById('password').type=showPass?'text':'password'; document.getElementById('eyeBtn').textContent=showPass?'🙈':'👁️'; }
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('loginBtn');
+  document.getElementById('alertBox').innerHTML = '';
+  setLoading(btn, true);
+  try {
+    const data = await AuthAPI.login({ email: document.getElementById('email').value.trim(), password: document.getElementById('password').value });
+    TokenManager.set(data.access_token);
+    TokenManager.setUser({ name: data.name, role: data.role });
+    Toast.success(`Welcome back, ${data.name}!`);
+    setTimeout(() => { window.location.href = data.role === 'admin' ? '/admin/dashboard.html' : '/dashboard.html'; }, 800);
+  } catch(err) {
+    document.getElementById('alertBox').innerHTML = `<div class="alert alert-danger"><span>❌</span><span>${err.message}</span></div>`;
+    setLoading(btn, false);
+  }
+});
+</script>
+</body>
+</html>

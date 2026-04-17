@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CourseStore - Learn & Grow</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <a href="/index.html" class="nav-brand">⚡ CourseStore</a>
+  <div id="hamburger" class="hamburger"><span></span><span></span><span></span></div>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="/index.html">Home</a></li>
+    <li><a href="#courses">Courses</a></li>
+    <div id="navAuth">
+      <li><a href="/login.html">Login</a></li>
+      <li><a href="/register.html" class="btn-nav">Get Started</a></li>
+    </div>
+  </ul>
+</nav>
+
+<section class="hero">
+  <div class="hero-badge">🚀 Premium Digital Courses</div>
+  <h1>Master New Skills<br><span class="gradient-text">Transform Your Career</span></h1>
+  <p>Access world-class courses from industry experts. Learn at your own pace.</p>
+  <div class="hero-actions">
+    <a href="#courses" class="btn btn-primary btn-lg">🎯 Browse Courses</a>
+    <a href="/register.html" class="btn btn-ghost btn-lg">📚 Join Free</a>
+  </div>
+</section>
+
+<div class="stats-bar">
+  <div class="stat-item"><div class="stat-number" id="statCourses">0+</div><div class="stat-label">Premium Courses</div></div>
+  <div class="stat-item"><div class="stat-number">500+</div><div class="stat-label">Happy Students</div></div>
+  <div class="stat-item"><div class="stat-number">98%</div><div class="stat-label">Satisfaction Rate</div></div>
+  <div class="stat-item"><div class="stat-number">24/7</div><div class="stat-label">Support</div></div>
+</div>
+
+<section class="section" id="courses">
+  <div class="section-header">
+    <div class="section-tag">📚 Our Catalog</div>
+    <h2 class="section-title">Featured <span class="gradient-text">Courses</span></h2>
+    <p class="section-subtitle">Carefully curated content to accelerate your learning journey</p>
+  </div>
+  <div class="courses-grid" id="coursesGrid">
+    <div class="skeleton-card"><div class="skeleton" style="height:200px;"></div><div style="padding:1.5rem;"><div class="skeleton" style="height:24px;width:80px;margin-bottom:12px;"></div><div class="skeleton" style="height:20px;margin-bottom:8px;"></div><div class="skeleton" style="height:40px;margin-top:20px;"></div></div></div>
+    <div class="skeleton-card"><div class="skeleton" style="height:200px;"></div><div style="padding:1.5rem;"><div class="skeleton" style="height:24px;width:80px;margin-bottom:12px;"></div><div class="skeleton" style="height:20px;margin-bottom:8px;"></div><div class="skeleton" style="height:40px;margin-top:20px;"></div></div></div>
+    <div class="skeleton-card"><div class="skeleton" style="height:200px;"></div><div style="padding:1.5rem;"><div class="skeleton" style="height:24px;width:80px;margin-bottom:12px;"></div><div class="skeleton" style="height:20px;margin-bottom:8px;"></div><div class="skeleton" style="height:40px;margin-top:20px;"></div></div></div>
+  </div>
+</section>
+
+<section class="section" style="background:rgba(255,255,255,0.02);">
+  <div class="section-header">
+    <div class="section-tag">✨ Why Us</div>
+    <h2 class="section-title">Why Choose <span class="gradient-text">CourseStore?</span></h2>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.5rem;max-width:1000px;margin:0 auto;">
+    <div class="glass-card" style="padding:2rem;"><div style="font-size:2.5rem;margin-bottom:1rem;">🎯</div><h3 style="margin-bottom:0.75rem;">Expert-Led Content</h3><p class="text-muted text-sm">Learn from industry professionals with real-world experience.</p></div>
+    <div class="glass-card" style="padding:2rem;"><div style="font-size:2.5rem;margin-bottom:1rem;">🔒</div><h3 style="margin-bottom:0.75rem;">Secure Payments</h3><p class="text-muted text-sm">Manual UPI verification ensures every transaction is authentic.</p></div>
+    <div class="glass-card" style="padding:2rem;"><div style="font-size:2.5rem;margin-bottom:1rem;">⚡</div><h3 style="margin-bottom:0.75rem;">Instant Access</h3><p class="text-muted text-sm">Get download links delivered to your email upon verification.</p></div>
+    <div class="glass-card" style="padding:2rem;"><div style="font-size:2.5rem;margin-bottom:1rem;">♾️</div><h3 style="margin-bottom:0.75rem;">Lifetime Access</h3><p class="text-muted text-sm">Purchase once and access your course materials forever.</p></div>
+  </div>
+</section>
+
+<section class="section" style="text-align:center;">
+  <div style="max-width:600px;margin:0 auto;background:linear-gradient(135deg,rgba(79,70,229,0.15),rgba(124,58,237,0.1));border:1px solid rgba(79,70,229,0.3);border-radius:24px;padding:3rem 2rem;">
+    <div style="font-size:3rem;margin-bottom:1rem;">🚀</div>
+    <h2 style="margin-bottom:1rem;">Ready to Start Learning?</h2>
+    <p style="color:var(--text-secondary);margin-bottom:2rem;">Join hundreds of students transforming their careers.</p>
+    <a href="/register.html" class="btn btn-primary btn-lg">Create Free Account</a>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-brand">⚡ CourseStore</div>
+  <p>© 2024 CourseStore. All rights reserved.</p>
+</footer>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/app.js"></script>
+<script>
+updateNavigation();
+async function loadCourses() {
+  try {
+    const courses = await CoursesAPI.list();
+    const grid = document.getElementById('coursesGrid');
+    document.getElementById('statCourses').textContent = courses.length + '+';
+    if (courses.length === 0) {
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon">📚</div><div class="empty-title">No Courses Yet</div><div class="empty-text">Check back soon!</div></div>';
+      return;
+    }
+    let purchasedIds = new Set();
+    if (TokenManager.isLoggedIn()) {
+      try { const payments = await PaymentsAPI.myPayments(); payments.filter(p => p.status === 'approved').forEach(p => purchasedIds.add(p.course_id)); } catch(e) {}
+    }
+    grid.innerHTML = courses.map((c, i) => renderCourseCard(c, purchasedIds.has(c.id))).join('');
+  } catch(err) {
+    document.getElementById('coursesGrid').innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon">⚠️</div><div class="empty-title">Failed to load</div><div class="empty-text">${err.message}</div></div>`;
+  }
+}
+loadCourses();
+</script>
+</body>
+</html>
