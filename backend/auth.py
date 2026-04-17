@@ -27,7 +27,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def hash_password(password):
     try:
         password = str(password)
-        password = password[:50]   # ✅ FIX (safe limit)
+        password = password.encode("utf-8")[:72].decode("utf-8", errors="ignore")
         return pwd_context.hash(password)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Password hashing error: {str(e)}")
